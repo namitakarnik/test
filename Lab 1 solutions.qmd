@@ -1,0 +1,305 @@
+---
+title: "Lab 1"
+author: "Ankur Garg, based on work by Haley Tiu, Rachel Hammond and Nikhil Kalathil"
+date: "01/26/2024"
+output: html_document
+---
+
+# Data Visualization
+
+Some define statistics as the field that focuses on turning information into knowledge. The first step in that process is to summarize and describe the raw information - the data. In this lab we explore data on college majors and earnings, specifically the data behind the FiveThirtyEight story ["The Economic Guide To Picking A College Major"](https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/).
+
+These data originally come from the American Community Survey (ACS) 2010-2012 Public Use Microdata Series. While this is outside the scope of this lab, if you are curious about how raw data from the ACS were cleaned and prepared, see [the code](https://github.com/fivethirtyeight/data/blob/master/college-majors/college-majors-rscript.R) FiveThirtyEight authors used.
+
+## Packages
+
+In this lab we will work with the `tidyverse` and `fivethirtyeight` packages. We start by loading the package. You may have to install the `fivethirtyeight` package first.
+
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+```
+
+You may get a warning when installing fivethirtyeight telling you that this package was built on a different version of R. It may tell you that some larger datasets need to be installed separately and gives you instructions to do that. Since we are not using these larger datasets, we should be fine.
+
+## Load the data
+
+The data frame we will be working with today is called `college_recent_grads` and it's in the `fivethirtyeight` package.
+
+To find out more about the dataset, type the following in your Console: `?college_recent_grads`. A question mark before the name of an object will always bring up its help file. This command must be ran in the Console.
+
+`college_recent_grads` is a tidy **data frame**, with each row representing an **observation** and each column representing a **variable**.
+
+What are some ways we can summarize and learn more about the data?
+
+## The Codebook
+
+The description of the variables, i.e. the **codebook**, is given below.
+
+| Header                         | Description                                                                |
+|:---------------------|:-------------------------------------------------|
+| `rank`                         | Rank by median earnings                                                    |
+| `major_code`                   | Major code, FO1DP in ACS PUMS                                              |
+| `major`                        | Major description                                                          |
+| `major_category`               | Category of major from Carnevale et al                                     |
+| `total`                        | Total number of people with major                                          |
+| `sample_size`                  | Sample size (unweighted) of full-time, year-round ONLY (used for earnings) |
+| `men`                          | Men with major                                                             |
+| `women`                        | Women with major                                                           |
+| `sharewomen`                   | Proportion women                                                           |
+| `employed`                     | Number employed (ESR == 1 or 2)                                            |
+| `employed_full_time`           | Employed 35 hours or more                                                  |
+| `employed_part_time`           | Employed less than 35 hours                                                |
+| `employed_full_time_yearround` | Employed at least 50 weeks (WKW == 1) and at least 35 hours (WKHP \>= 35)  |
+| `unemployed`                   | Number unemployed (ESR == 3)                                               |
+| `unemployment_rate`            | Unemployed / (Unemployed + Employed)                                       |
+| `median`                       | Median earnings of full-time, year-round workers                           |
+| `p25th`                        | 25th percentile of earnigns                                                |
+| `p75th`                        | 75th percentile of earnings                                                |
+| `college_jobs`                 | Number with job requiring a college degree                                 |
+| `non_college_jobs`             | Number with job not requiring a college degree                             |
+| `low_wage_jobs`                | Number in low-wage service jobs                                            |
+
+# Visualization
+
+What sort of plots might we want to run if we're interested in majors and unemployment rates? Check [the cheatsheet Avi shared in class](https://github.com/rstudio/cheatsheets/raw/main/data-visualization-2.1.pdf) to get some ideas.
+
+```{r, eval = FALSE}
+college_recent_grads |> 
+  ggplot(aes(y = major_category)) + 
+  geom_bar()
+```
+
+## Aesthetics and Facets
+
+Let's take a look at unemployment rates and median earnings by major by trying out different aesthetics and facets.
+
+```{r}
+ggplot(data = college_recent_grads) + 
+  geom_point(aes(x = median, y = unemployment_rate, color = major_category))
+```
+
+```{r}
+ggplot(data = college_recent_grads) + 
+  geom_point(aes(x = median, y = unemployment_rate)) + 
+  facet_wrap( ~ major_category, nrow = 4)
+```
+
+How can we fix the scales here, to make this more intuitive to read?
+
+ANSWER:
+
+```{r}
+### Please note that there are multiple ways to address this issue. Please see two potential options below.
+ggplot(data = college_recent_grads) + 
+  geom_point(aes(x = median, y = unemployment_rate)) + 
+  facet_wrap( ~ major_category, nrow = 4) +
+  scale_x_continuous(breaks = c(40000,60000, 80000, 100000), labels = c("40k", "60k", "80k", "100k"))
+
+```
+
+```{r}
+ggplot(data = college_recent_grads) + 
+  geom_point(aes(x = median, y = unemployment_rate)) + 
+  theme(axis.text.x = element_text(angle = 45)) +
+  facet_wrap( ~ major_category, nrow = 4)
+
+college_recent_grads |>
+  ggplot(aes(x = median, y = unemployment_rate)) + 
+  geom_point() +
+  geom_smooth(method = lm) +
+  facet_wrap( ~ major_category, nrow = 4) + 
+  scale_x_continuous(breaks = c(40000,60000, 80000, 100000), labels = c("40k", "60k", "80k", "100k"))
+```
+
+Note: e = 10 \^
+
+So 4e+04 = 4 (10\^4) = 40,000
+
+### Breakout groups
+
+What we've done so far hasn't made the data very clear. Spend 5 minutes thinking of a different way to look at the data.
+
+# Problem Set 2
+
+## Looking ahead: data transformation
+
+Next week's class will focus on transforming data in the tidyverse. But you've already seen some of the key functions in our `gapminder` example. We'll expand on that a bit more now. *Hint:* To do this part of the problem set, you might want to check out R4DS Ch. 5.
+
+First, let's load `gapminder`.
+
+```{r}
+
+library(gapminder)
+```
+
+We'll focus on two key functions: `filter`, which chooses a subset of rows (i.e., observations); and `select`, which chooses a subset of columns (i.e., variables). Modifying the code from class, we can select the United States in 2007 via:
+
+```{r}
+gapminder |>
+  filter(year == 2007, country == "United States")
+  filter(year == 2006, country == "Afghanistan")
+  filter(year == 1999, country == "United States")
+```
+
+We can focus on one variable (or more if you want) by using `select`:
+
+```{r}
+gapminder |>
+  filter(year == 2007, country == "United States") |>
+  select(lifeExp)
+```
+
+1.  Output the GDP per capita of the United States in 1952.
+
+```{r}
+gapminder |> 
+  filter(country == 'United States' & year == 1952) |> 
+  select(gdpPercap)
+```
+
+2.  Output the population of the United States in 1992, 1997, 2002, and 2007. Does your output show both year and population? Or just population? See if you can display both.
+
+```{r}
+### here i used %in%, which is logic that produces a logical (TRUE or FALSE) based on if the first value is contained within the array. This is a faster way of saying year == 1992 | year == 1997 | year == 2002, etc etc
+### | in R means "or"
+#using %in%
+gapminder |>
+  filter(country == 'United States'
+         ,year %in% c(1992, 1997, 2002, 2007)) |> 
+  select(year, pop)
+
+#same thing using ==
+gapminder |>
+  filter(country == 'United States'
+         , year == c(1992, 1997, 2002, 2007)) |> 
+  select(pop)
+
+#alternate route to same result
+gapminder |>
+  select(country, pop, year) |>
+  filter(country == 'United States') |>
+  filter(year %in% c(1992, 1997, 2002, 2007))
+```
+
+### Try 3-5 in break out groups
+
+3.  Output a table of the life expectancy in China for all years.
+
+```{r}
+gapminder |> 
+  filter(country == "China") |>
+  select(year, lifeExp)
+```
+
+4.  Make a plot of the life expectancy in China for all years.
+
+```{r}
+gapminder |> 
+  filter(country == "China") |>
+  ggplot(mapping = aes(x = year, y = lifeExp)) +
+  geom_point() + 
+  geom_line() +
+  labs(x = "Year"
+       ,y = "Life Expectancy"
+       ,title = "Life Expectancy in China, 1952-2007")
+```
+
+5.  Make a plot comparing the life expectancy in China and the United States for all years.
+
+```{r}
+gapminder |> 
+  filter(country %in% c("China","United States")) |>
+  ggplot(mapping = aes(x = year, y = lifeExp, color = country)) +
+  geom_point() + 
+  geom_line() +
+  labs(x = "Year"
+       ,y = "Life Expectancy"
+       ,title = "China is closing the life expectancy gap with the United States")
+```
+
+# If Extra Time
+
+Let's go back to the `fivethirtyeight`data and play around with some more visualizations.
+
+## Histograms
+
+What could we do to improve this graph?
+
+```{r}
+ggplot(college_recent_grads, mapping = aes(median)) +
+  geom_histogram(fill = "cornflowerblue",
+                 color = "white") +
+  labs(title = "Combined College Majors vs Median Income")
+```
+
+We could change the x axis labels to dollars
+
+```{r}
+ggplot(college_recent_grads, mapping = aes(median)) +
+  geom_histogram(fill = "cornflowerblue",
+                 color = "white") +
+  labs(title = "Combined College Majors vs Median Income") + 
+  scale_x_continuous(labels = scales::dollar)
+```
+
+We could adjust the bin widths
+
+```{r}
+ggplot(college_recent_grads, mapping = aes(median)) +
+  geom_histogram(fill = "cornflowerblue",
+                 color = "white",
+                 binwidth = 5000) +
+  labs(title = "Combined College Majors vs Median Income") + 
+  scale_x_continuous(labels = scales::dollar)
+```
+
+We could add color to show the different majors
+
+```{r}
+ggplot(college_recent_grads, mapping = aes(median, fill = major_category)) +
+  geom_histogram(
+                 color = "white",
+                 binwidth = 5000) +
+  labs(title = "Combined College Majors vs Median Income") + 
+  scale_x_continuous(labels = scales::dollar)
+```
+
+Ok this last plot is cool but there are probably too many major categories for the plot to be easy to read.
+
+## Scatterplot
+
+```{r}
+ggplot(college_recent_grads,
+       aes(x = median,
+           y = major_category)) +
+  geom_point() 
+```
+
+How can we fix the labels on the x-axis?
+
+## Box Plots
+
+Whoa! We are using that weird `|>` thing again!
+
+```{r}
+college_recent_grads |>
+  ggplot(aes(major_category, median, fill = major_category)) +
+  geom_boxplot() +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(title = "Median Salary of Recent College Grads by Major Category",
+       x = "",
+       y = "") +
+  scale_y_continuous(labels = scales::dollar)
+```
+
+What's a way we could improve this plot?
+
+## Other Plots?
+
+Discuss in break out groups and be ready to share what you made!
+
+```{r, eval = FALSE}
+??? 
+```

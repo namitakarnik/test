@@ -1,0 +1,237 @@
+---
+title: "ds4pp\\Problem Set 2a"
+author: "Namita Karnik"
+date: "Jan. 31st, 2024"
+format: 
+  html:
+    embed-resources: true
+---
+
+```{r setup}
+#| include: false 
+library(tidyverse)
+```
+
+Due to bcourses by the start of class (Thursday, Feb. 1 at 10:30am).
+
+Name your submission files `ps2a.qmd` and `ps2a.html`.
+
+# R for Data Science Exercises
+
+## Debugging mindset
+
+Look carefully! (This may seem like an exercise in pointlessness, but training your brain to notice even the tiniest difference will pay off when programming.)
+
+1.  Tweak each of the following R commands so that they run correctly:
+
+```{r}
+#| eval: false
+library(tidyverse)
+```
+
+```{r}
+#| eval: false
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+```{r}
+library(gapminder)
+
+#| eval: false
+#| 
+filter(mpg, cyl == 8)
+```
+
+## grammar of graphics: `geom`s
+
+1.  What geom would you use to draw a line chart? A boxplot? A histogram? An area chart?
+Ans: geom_line() for a line chart
+geom_boxplot() for a boxplot
+geom_histogram() for a histogram
+geom_area() for an area chart
+
+2.  Will these two graphs look different? Why/why not?
+Ans: Both these graphs will look the same, because in the first set of code, we've defined the mapping argument inside of ggplot. We've specified it there, so when we add the '+' and the two scatterplot and smooth curve arguments, we don't need to specify how they need to be mapped.
+
+The mapping argument, as defined by the R for data science textbook is "how variables in your dataset are mapped to visual properties (aesthetics) of your plot". 
+
+In the second set of code, we haven't inclided the mapping argument in the earlier ggplot brackets, but are instead clarifying it twice, once for the scatterplot and once for smooth curve.    
+
+```{r}
+#| eval: false
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_smooth()
+
+ggplot() +
+  geom_point(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(data = mpg, mapping = aes(x = displ, y = hwy))
+```
+
+3.  What does the `se` argument to `geom_smooth()` do? What is the default value passed to `se`?
+Ans: se is the logical value. The default value assigned to se is 95% Confidence Interval (which is also the generally accepted value when you've run a regression and need to check the r^2 value). Adding in se = FALSE removes the confidence interval, and makes the geom_smooth curve a thin line. If we were to remove it in the graph below, the geom_smooth line created isn't as thin (it broadens towards the end because the variation is values increases). 
+
+4.  You are investigating the connection between city gas mileage and car characteristics in your role as a policy analyst for a climate change organization. Use this code to make a simple version of this graph.
+
+```{r}
+
+?mpg 
+
+#| echo: false
+#| warning: false
+#| message: false
+ggplot(data = mpg, mapping = aes(x = displ, y = cty)) +
+    geom_point(aes(color = drv)) +
+    geom_smooth(se = FALSE)
+
+#| echo: false
+#| warning: false
+#| message: false
+ggplot(data = mpg, mapping = aes(x = displ, y = cty)) +
+    geom_point(aes(color = drv)) +
+    geom_smooth(color = "black", se = FALSE) +
+    labs(x = "Engine Size (displacement in liters)"
+       ,y = "Fuel Efficiency (MPG)"
+       ,title = "Fuel Efficiency by Engine Size") +
+  theme(legend.position = "none")
+
+```
+
+Your colleague suggests you improve the graph by:
+
+-   Making the line black
+
+-   Making the x- and y-axes labels more informative using `+ labs()`
+
+-   Using an informative title to capture the headline finding of your analysis
+
+-   Removing the legend (google might be helpful to learn how)
+
+Make these changes. Are all four changes improvements? Which change made the plot worse and why?
+Ans: Adding in the labels and the title makes the graph much easier to understand. The legend is useful and should have stayed in, but colored to the class of automobiles. Currently, the graph does not explain the difference in the colored points (red, green and blue. )
+Lastly, I personally found no difference in the change of geom_smooth line color from blue to black.
+
+## grammar of graphics: Positional adjustments
+
+5.  What is the problem with this plot? How could you improve it? (*Hint:* What other `geom`s could you try?)
+Ans: I liked using geom_jitter. The clustering technique of sorts that geom_jitter produces is useful in understanding the density of where the data is concentrated, while still presenting individual data points (and a visible trend line). What I found interesting is that both geom_jitter(), and geom_point(position="jitter") gave me plots which looked the same, and after googling this, I discovered that they are indeed the same. 
+
+Geom_jitter reduces overplotting, and adds a small amount of noise to each point, which makes density of points more visible. 
+
+```{r}
+#| eval: false
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+geom_jitter()
+
+#| eval: false
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+geom_point(position = "jitter")
+
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter(width = 0)
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter(width = 20)
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter(height = 0)
+
+```
+
+6.  What parameters to `geom_jitter()` control the amount of jittering?
+And: From the geom_jitter() documentation, there are two arguments to jitter:
+width controls the amount of horizontal displacement (jitter), and
+height controls the amount of vertical displacement (jitter).
+
+We can set these both parameters individually, or set both. Also, there is a default value (not zero) assigned to them, in case we don't give it a value. 
+
+```{r}
+#| eval: false
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter(width = 0)
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter(height = 20)
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter(width = 20,height = 0)
+```
+
+
+7.  Compare and contrast `geom_jitter()` with `geom_count()`.
+Ans: Both geom_jitter and geom_count are means to handle overlapping points. Geom_gitter adds a small amount of noise to each point, which makes density of points more visible. This reduces overlap and makes points visible (which otherwise would have overlapped). 
+
+Geom_count on the other hand, handles overlapping points, my making them bigger. The size of the points is propotional to the number of observations, and these are mapped at each distinct location. 
+
+```{r}
+#| eval: false
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_jitter()
+
+ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) +
+  geom_count()
+```
+# Looking ahead: data transformation
+
+Next week's class will focus on transforming data in the tidyverse. But you've already seen some of the key functions in our `gapminder` example. We'll expand on that a bit more now. *Hint:* To do this part of the problem set, you might want to check out R4DS Ch. 3.
+
+First, let's load `gapminder`.
+
+```{r}
+library(gapminder)
+gapminder
+```
+
+We'll focus on two key functions: `filter`, which chooses a subset of rows (i.e., observations); and `select`, which chooses a subset of columns (i.e., variables). Modifying the code from class, we can select the United States in 2007 via:
+
+```{r}
+gapminder |>
+  filter(year == 2007, country == "United States")
+```
+
+We can focus on one variable (or more if you want) by using `select`:
+
+```{r}
+gapminder |>
+  filter(year == 2007, country == "United States") |>
+  select(lifeExp)
+```
+
+1.  Output the GDP per capita of the United States in 1952.
+```{r}
+gapminder |>
+  filter(year == 1952, country == "United States") |>
+  select(gdpPercap)
+```
+2.  Output the population of the United States in 1992, 1997, 2002, and 2007. Does your output show both year and population? Or just population? See if you can display both.
+```{r}
+gapminder |>
+  select(country, pop, year) |>
+  filter(country == 'United States') |>
+  filter(year %in% c(1992, 1997, 2002, 2007))
+```
+3.  Output a table of the life expectancy in China for all years.
+```{r}
+gapminder |> 
+  filter(country == "China") |>
+  select(year, lifeExp)
+```
+4.  Make a plot of the life expectancy in China for all years.
+```{r}
+gapminder |> 
+  filter(country == "China") |>
+  ggplot(mapping = aes(x = year, y = lifeExp)) +
+  geom_point() + 
+  geom_line() +
+  labs(x = "Year"
+       ,y = "Life Expectancy"
+       ,title = "Life Expectancy in China, 1952-2007")
+```
+5.  Make a plot comparing the life expectancy in China and the United States for all years.
+```{r}
+gapminder |> 
+  filter(country %in% c("China","United States")) |>
+  ggplot(mapping = aes(x = year, y = lifeExp, color = country)) +
+  geom_point() + 
+  geom_line() +
+  labs(x = "Year"
+       ,y = "Life Expectancy"
+       ,title = "China is closing the life expectancy gap with the United States")
+```
+```
